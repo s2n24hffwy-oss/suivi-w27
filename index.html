@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<title>Suivi W27</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f4f5f9; --surface:#ffffff; --band:#f0f0f4; --line:#d9dbe6; --ink:#1d2233; --muted:#5d6479;
+  --accent:#5175b9; --accent-ink:#ffffff; --accent-soft:#e4eaf6; --ok:#2f7d52; --ok-soft:#e3f2e9; --err:#b3372f; --err-soft:#f9e6e4;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark; --bg:#14171f; --surface:#1c2029; --band:#222734; --line:#323849; --ink:#e7e9f0; --muted:#9aa1b5;
+  --accent:#7d9be0; --accent-ink:#0f1320; --accent-soft:#263252; --ok:#6cc494; --ok-soft:#1d3327; --err:#ef8a80; --err-soft:#3a2221;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --bg:#14171f; --surface:#1c2029; --band:#222734; --line:#323849; --ink:#e7e9f0; --muted:#9aa1b5;
+  --accent:#7d9be0; --accent-ink:#0f1320; --accent-soft:#263252; --ok:#6cc494; --ok-soft:#1d3327; --err:#ef8a80; --err-soft:#3a2221;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:880px;margin:0 auto;padding:32px 16px 48px;display:grid;gap:20px}
+header h1{font-size:26px;font-weight:600;margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.drop{position:relative;border:2px dashed var(--accent);border-radius:10px;background:var(--surface);padding:28px 20px;display:grid;justify-items:center;gap:8px;text-align:center;cursor:pointer;transition:background .15s}
+.drop:hover,.drop.over{background:var(--accent-soft)}
+.drop:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.drop strong{font-size:17px}
+.drop span{color:var(--muted);font-size:14px}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop svg{width:34px;height:34px;color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between}
+.field{display:grid;gap:4px}
+.field label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.field input{font:inherit;font-family:var(--mono);padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.fname{font-family:var(--mono);font-size:15px;font-weight:500;word-break:break-all}
+.btn{font:inherit;font-weight:600;border:0;border-radius:8px;padding:11px 20px;background:var(--accent);color:var(--accent-ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.btn:hover{filter:brightness(1.08)}
+.btn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:13px;padding:3px 10px;border-radius:99px;background:var(--band);color:var(--muted)}
+.chip b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.chip.example{background:var(--accent-soft);color:var(--accent)}
+.msg{padding:10px 14px;border-radius:8px;font-size:14px}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg.err{background:var(--err-soft);color:var(--err)}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:8px;max-height:440px;overflow-y:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th{position:sticky;top:0;background:#5175b9;color:#fff;text-align:left;font-weight:600;padding:6px 8px;white-space:nowrap}
+td{padding:5px 8px;border-top:1px solid var(--line);white-space:nowrap}
+tbody tr:nth-child(odd) td{background:var(--band)}
+td.id,td.cpo{font-family:var(--mono);font-size:12.5px}
+td.q{text-align:center;font-variant-numeric:tabular-nums}
+td.blank{min-width:46px}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.btn.alt{background:var(--surface);color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+.pos{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.poshead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.poshead h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;margin:0}
+.poshead .count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.link{font:inherit;font-size:13px;background:none;border:0;padding:2px 4px;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.link:focus-visible,.po:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.polist{display:flex;flex-wrap:wrap;gap:6px}
+.po{font:inherit;font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:6px;padding:5px 9px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.po small{font-family:var(--sans);font-size:11px;opacity:.8}
+.po.auto::after{content:"auto";font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:0 5px;border-radius:4px;background:var(--accent-ink);color:var(--accent)}
+.po.auto[aria-pressed="false"]::after{background:var(--accent-soft)}
+.memory{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:13px;color:var(--muted)}
+.memory b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.po.excl{border-style:dashed;opacity:.6}
+.po.excl[aria-pressed="true"]{opacity:1}
+.exclrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted)}
+.exclrow input{font:inherit;font-family:var(--mono);font-size:12.5px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);flex:1;min-width:200px;max-width:420px}
+.exclrow input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.po[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.po::before{content:"";width:10px;height:10px;border:1.5px solid currentColor;border-radius:2px;flex:none}
+.po[aria-pressed="true"]::before{background:currentColor;box-shadow:inset 0 0 0 2px var(--accent)}
+.ptitle{display:grid;gap:2px}
+.ptitle h2{font-size:19px;font-weight:600;margin:0;letter-spacing:-.005em}
+.ptitle p{margin:0;color:var(--muted);font-size:14px}
+.empty{padding:18px;text-align:center;color:var(--muted)}
+.how{color:var(--muted);font-size:14px;margin:0;padding-left:18px;display:grid;gap:2px}
+@media (prefers-reduced-motion:reduce){.drop{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Suivi W27</h1>
+    <p>Glisse le rapport brut « W27_Daily_Shipment_Report… » reçu le matin. La page le remet au format de suivi et te le renvoie en Excel.</p>
+  </header>
+
+  <label class="drop" id="drop">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+    <strong>Dépose le fichier .xlsx ici</strong>
+    <span>ou clique pour le choisir</span>
+    <input type="file" id="file" accept=".xlsx">
+  </label>
+
+  <div id="msg" class="msg" hidden></div>
+
+  <section class="panel" id="result">
+    <div class="ptitle"><h2>Commande du Programme</h2><p>Les Customer PO que tu choisis, avec le suivi Reçu / Facture / Packing Slip / PO.</p></div>
+    <div class="row">
+      <div class="field">
+        <label for="date">Date de réception</label>
+        <input type="date" id="date">
+      </div>
+      <div class="field" style="flex:1;min-width:200px">
+        <label>Fichier généré</label>
+        <div class="fname" id="fname">W27- 2026-09-25.xlsx</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="save" type="button" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+          Excel
+        </button>
+        <button class="btn alt" id="pdf" type="button" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg>
+          PDF
+        </button>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="pos">
+      <div class="poshead">
+        <h2>Customer PO à garder</h2>
+        <span class="count" id="pocount"></span>
+        <button class="link" id="all" type="button">Tout</button>
+        <button class="link" id="none" type="button">Aucun</button>
+      </div>
+      <div class="polist" id="polist"></div>
+      <div class="exclrow"><label for="excl">Jamais cochés d'office (début du PO) :</label><input id="excl" type="text" value="HNC, QB, QUENTIN, MELISSA, MB" spellcheck="false" autocomplete="off"></div>
+      <div class="memory"><span id="memtxt">Mémoire en chargement…</span><button class="link" id="forget" type="button">Effacer la mémoire</button></div>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Shipment ID</th><th>Customer PO</th><th>Part Name</th><th>Qty</th><th>Recu</th><th>Facture</th><th>Packing Slip</th><th>PO</th><th>Suivi</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="special">
+    <div class="ptitle"><h2>Commande Special</h2><p>Les PO qui contiennent « SPECIAL » ou qui commencent par un des débuts ci-dessous sont pris d'office. Tu peux en ajouter d'autres à la main.</p></div>
+    <div class="row">
+      <div class="field" style="flex:1;min-width:200px">
+        <label>Fichier généré</label>
+        <div class="fname" id="sfname">W27- 2026-09-25 Commande Special.xlsx</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="ssave" type="button" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg> Excel</button>
+        <button class="btn alt" id="spdf" type="button" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg> PDF</button>
+      </div>
+    </div>
+    <div class="exclrow"><label for="sprefix">Commence aussi par :</label><input id="sprefix" type="text" value="QB-TEZ, QB-FAS, HNC-TEZ, HNC-FAS, MB-TEZ, MB-FAS" spellcheck="false" autocomplete="off"></div>
+    <div class="stats" id="sstats"></div>
+    <div class="pos">
+      <div class="poshead">
+        <button class="btn alt" id="saddbtn" type="button" aria-expanded="false" disabled>+ Ajouter des PO</button>
+        <span class="count" id="saddcount"></span>
+      </div>
+      <div class="polist" id="saddlist" hidden></div>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr><th>Shipment ID</th><th>Customer PO</th><th>Part Name</th><th>Qty</th><th>Recu</th><th>Facture</th><th>Packing Slip</th><th>PO</th><th>Suivi</th></tr></thead>
+        <tbody id="srows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <ol class="how">
+    <li>La date du fichier est celle de réception (le rapport indique la veille, la date de préparation).</li>
+    <li>Toutes les lignes sont gardées, doublons de SH et de PO compris.</li>
+    <li>Commande du Programme : les PO cochés décident de ce qui sort dans l'Excel et dans le PDF.</li>
+    <li>Commande Special : les PO qui contiennent « SPECIAL » (HNCSPECIAL24, QBSPECIAL24…) ou qui commencent par un début de la liste (QB-TEZ, HNC-FAS…) sont pris d'office. « + Ajouter des PO » te laisse en ajouter d'autres pour ce rapport-ci.</li>
+    <li>Les PO qui commencent par un des débuts de la liste « Jamais cochés d'office » ne sont jamais cochés tout seuls, ni par « Tout ». Ils sont en pointillé à la fin de la liste, et tu peux quand même les cocher à la main.</li>
+    <li>La page retient tes choix à chaque téléchargement. Un PO que tu coches souvent (au moins 2 jours, et la moitié des fois où il apparaît) sera coché d'office, marqué « auto ». La page reconnaît un PO par ses 5 premiers caractères, en s'arrêtant au premier chiffre : SF-ILA-02117239 devient SF-IL, HNC24SEPT26TP devient HNC, QUENTIN devient QUENT. Décoche un PO « auto » et la page en tiendra compte.</li>
+    <li>Le PDF regroupe les lignes par Customer PO, avec des cases à cocher pour la vérification sur papier.</li>
+  </ol>
+</div>
+
+<script>
+/* ---------- ZIP (lecture) ---------- */
+async function inflateRaw(bytes){
+  const ds=new DecompressionStream('deflate-raw');
+  const out=new Blob([bytes]).stream().pipeThrough(ds);
+  return new Uint8Array(await new Response(out).arrayBuffer());
+}
+async function unzip(buf){
+  const u8=new Uint8Array(buf), dv=new DataView(buf), files={};
+  let e=u8.length-22;
+  while(e>=0 && dv.getUint32(e,true)!==0x06054b50) e--;
+  if(e<0) throw new Error("Ce fichier n'est pas un .xlsx valide.");
+  const n=dv.getUint16(e+10,true); let p=dv.getUint32(e+16,true);
+  const dec=new TextDecoder();
+  for(let i=0;i<n;i++){
+    const method=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true);
+    const nl=dv.getUint16(p+28,true), xl=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), off=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nl));
+    files[name]={method,csize,off};
+    p+=46+nl+xl+cl;
+  }
+  return {
+    has:k=>k in files,
+    async text(k){
+      const f=files[k]; if(!f) return null;
+      const lnl=dv.getUint16(f.off+26,true), lxl=dv.getUint16(f.off+28,true);
+      const start=f.off+30+lnl+lxl, raw=u8.subarray(start,start+f.csize);
+      const data=f.method===0?raw:await inflateRaw(raw);
+      return dec.decode(data);
+    }
+  };
+}
+
+/* ---------- Lecture du rapport brut ---------- */
+const colIdx=ref=>{let c=0;for(const ch of ref.replace(/\d+/g,''))c=c*26+ch.charCodeAt(0)-64;return c-1;};
+function xml(s){return new DOMParser().parseFromString(s,'application/xml');}
+function kids(el,name){return Array.from(el.getElementsByTagName(name));}
+
+async function readReport(buf){
+  const z=await unzip(buf);
+  const wb=xml(await z.text('xl/workbook.xml'));
+  const rels=xml(await z.text('xl/_rels/workbook.xml.rels'));
+  const first=kids(wb,'sheet')[0];
+  const rid=first.getAttribute('r:id')||first.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id');
+  let target=kids(rels,'Relationship').find(r=>r.getAttribute('Id')===rid)?.getAttribute('Target')||'worksheets/sheet1.xml';
+  target=target.startsWith('/')?target.slice(1):'xl/'+target.replace(/^\.\//,'');
+  let shared=[];
+  const sst=await z.text('xl/sharedStrings.xml');
+  if(sst) shared=kids(xml(sst),'si').map(si=>kids(si,'t').map(t=>t.textContent).join(''));
+  const sh=xml(await z.text(target));
+  const grid=[];
+  for(const r of kids(sh,'row')){
+    const ri=+r.getAttribute('r')-1, line=[]; let ci=0;
+    for(const c of kids(r,'c')){
+      const ref=c.getAttribute('r'); if(ref) ci=colIdx(ref);
+      const t=c.getAttribute('t'), v=c.getElementsByTagName('v')[0]?.textContent;
+      let val=null;
+      if(t==='s') val=shared[+v]??'';
+      else if(t==='inlineStr') val=kids(c,'t').map(x=>x.textContent).join('');
+      else if(t==='str'||t==='e') val=v??null;
+      else if(t==='b') val=v==='1';
+      else if(v!=null&&v!=='') val=Number(v);
+      line[ci]=val; ci++;
+    }
+    grid[ri]=line;
+  }
+  // Repère la ligne d'en-têtes
+  let h=-1;
+  for(let i=0;i<grid.length;i++){ if(grid[i]&&grid[i].some(v=>typeof v==='string'&&v.trim()==='Shipment ID')){h=i;break;} }
+  if(h<0) throw new Error("Je ne trouve pas la colonne « Shipment ID ». Est-ce bien le rapport brut W27_Daily_Shipment_Report ?");
+  const head=grid[h].map(v=>typeof v==='string'?v.trim().toLowerCase():'');
+  const find=n=>{const i=head.indexOf(n.toLowerCase()); if(i<0) throw new Error(`Colonne « ${n} » introuvable dans le rapport.`); return i;};
+  const ix={sh:find('Shipment ID'),po:find('Customer PO'),part:find('Part Name'),qty:find('Qty')};
+  const rows=[];
+  for(let i=h+1;i<grid.length;i++){
+    const g=grid[i]; if(!g) continue;
+    const s=g[ix.sh]; if(s==null||String(s).trim()==='') continue;
+    rows.push({sh:String(s),po:g[ix.po]==null?'':String(g[ix.po]),part:g[ix.part]==null?'':String(g[ix.part]),qty:g[ix.qty]});
+  }
+  // Lignes d'en-tête du rapport (titre, As Of, Product)
+  const top=[];
+  for(let i=0;i<h;i++){ const g=grid[i]; if(!g) continue; const v=g.find(x=>x!=null&&x!==''); if(v!=null) top.push({row:i+1,text:String(v)}); }
+  return {rows,top};
+}
+
+/* ---------- Écriture du fichier de suivi ---------- */
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const L=i=>String.fromCharCode(65+i);
+
+function buildSheet(rep){
+  const HEAD=['Shipment ID','Customer PO','Part Name','Qty','Recu','Facture','Packing Slip ','PO','Suivi'];
+  const last=8+rep.rows.length;
+  const heights={1:9,2:15.95,3:4.35,4:15.95,5:3.75,6:15.95,7:11.1,8:13.35};
+  const out=[]; const topMap={}; rep.top.forEach(t=>topMap[t.row]=t.text);
+  for(let r=1;r<=7;r++){
+    const t=topMap[r];
+    out.push(`<row r="${r}" ht="${heights[r]}" customHeight="1">`+(t!=null?`<c r="A${r}" s="1" t="inlineStr"><is><t xml:space="preserve">${esc(t)}</t></is></c>`:'')+`</row>`);
+  }
+  out.push(`<row r="8" ht="13.35" customHeight="1">`+HEAD.map((h,i)=>`<c r="${L(i+1)}8" s="2" t="inlineStr"><is><t xml:space="preserve">${esc(h)}</t></is></c>`).join('')+`</row>`);
+  rep.rows.forEach((d,k)=>{
+    const r=9+k, odd=k%2===0, tx=odd?3:4, qn=odd?5:6, dt=odd?7:8;
+    const str=(c,v)=>`<c r="${c}${r}" s="${tx}" t="inlineStr"><is><t xml:space="preserve">${esc(v)}</t></is></c>`;
+    const qty=(typeof d.qty==='number')?`<c r="E${r}" s="${qn}"><v>${d.qty}</v></c>`:`<c r="E${r}" s="${qn}" t="inlineStr"><is><t>${esc(d.qty??'')}</t></is></c>`;
+    out.push(`<row r="${r}" ht="19.7" customHeight="1">${str('B',d.sh)}${str('C',d.po)}${str('D',d.part)}${qty}<c r="F${r}" s="${dt}"/><c r="G${r}" s="${tx}"/><c r="H${r}" s="${tx}"/><c r="I${r}" s="${tx}"/><c r="J${r}" s="${tx}"/></row>`);
+  });
+  const widths=[0.14,14.71,17.14,32.71,10.71,5.29,7.29,11.86,3.57,5.29];
+  const merges=[2,4,6].filter(r=>topMap[r]!=null).map(r=>`<mergeCell ref="A${r}:B${r}"/>`);
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<dimension ref="A1:J${last}"/>
+<sheetViews><sheetView workbookViewId="0"><pane ySplit="8" topLeftCell="A9" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="B9" sqref="B9"/></sheetView></sheetViews>
+<sheetFormatPr defaultRowHeight="12.75"/>
+<cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols>
+<sheetData>${out.join('')}</sheetData>
+<autoFilter ref="B8:J${last}"/>
+${merges.length?`<mergeCells count="${merges.length}">${merges.join('')}</mergeCells>`:''}
+<pageMargins left="0.5" right="0.5" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
+</worksheet>`;
+}
+
+const STYLES=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="1"><numFmt numFmtId="164" formatCode="m/d/yyyy"/></numFmts>
+<fonts count="3">
+<font><sz val="10"/><color rgb="FF000000"/><name val="Arial"/><family val="2"/></font>
+<font><b/><sz val="9"/><color rgb="FFFFFFFF"/><name val="Arial"/><family val="2"/></font>
+<font><sz val="9"/><color rgb="FF000000"/><name val="Arial"/><family val="2"/></font>
+</fonts>
+<fills count="5">
+<fill><patternFill patternType="none"/></fill>
+<fill><patternFill patternType="gray125"/></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FF5175B9"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFF0F0F4"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFFFFFFF"/><bgColor indexed="64"/></patternFill></fill>
+</fills>
+<borders count="3">
+<border><left/><right/><top/><bottom/><diagonal/></border>
+<border><left style="thin"><color rgb="FFCACAD9"/></left><right style="thin"><color rgb="FFCACAD9"/></right><top style="thin"><color rgb="FFCACAD9"/></top><bottom style="thin"><color rgb="FFCACAD9"/></bottom><diagonal/></border>
+<border><left style="thin"><color rgb="FFCAC9D9"/></left><right style="thin"><color rgb="FFCAC9D9"/></right><top style="thin"><color rgb="FFCAC9D9"/></top><bottom style="thin"><color rgb="FFCAC9D9"/></bottom><diagonal/></border>
+</borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="9">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="49" fontId="1" fillId="2" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+<xf numFmtId="49" fontId="2" fillId="3" borderId="2" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+<xf numFmtId="49" fontId="2" fillId="4" borderId="2" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+<xf numFmtId="0" fontId="2" fillId="3" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="2" fillId="4" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="164" fontId="2" fillId="3" borderId="2" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+<xf numFmtId="164" fontId="2" fillId="4" borderId="2" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
+
+function buildXlsx(rep){
+  const last=8+rep.rows.length;
+  const parts={
+'[Content_Types].xml':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`,
+'_rels/.rels':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+'xl/workbook.xml':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView/></bookViews><sheets><sheet name="Shipment" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">Shipment!$B$8:$J$${last}</definedName></definedNames></workbook>`,
+'xl/_rels/workbook.xml.rels':`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
+'xl/styles.xml':STYLES,
+'xl/worksheets/sheet1.xml':buildSheet(rep)
+  };
+  return zipStore(parts);
+}
+
+/* ---------- ZIP (écriture, sans compression) ---------- */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zipStore(parts){
+  const enc=new TextEncoder(), chunks=[], central=[]; let off=0;
+  for(const [name,content] of Object.entries(parts)){
+    const nb=enc.encode(name), data=enc.encode(content), crc=crc32(data);
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);lh.setUint16(8,0,true);
+    lh.setUint16(10,0,true);lh.setUint16(12,0x21,true);lh.setUint32(14,crc,true);lh.setUint32(18,data.length,true);lh.setUint32(22,data.length,true);
+    lh.setUint16(26,nb.length,true);lh.setUint16(28,0,true);
+    chunks.push(new Uint8Array(lh.buffer),nb,data);
+    const ch=new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);ch.setUint16(10,0,true);
+    ch.setUint16(12,0,true);ch.setUint16(14,0x21,true);ch.setUint32(16,crc,true);ch.setUint32(20,data.length,true);ch.setUint32(24,data.length,true);
+    ch.setUint16(28,nb.length,true);ch.setUint32(42,off,true);
+    central.push(new Uint8Array(ch.buffer),nb);
+    off+=30+nb.length+data.length;
+  }
+  const csize=central.reduce((a,b)=>a+b.length,0);
+  const end=new DataView(new ArrayBuffer(22));
+  const n=Object.keys(parts).length;
+  end.setUint32(0,0x06054b50,true);end.setUint16(8,n,true);end.setUint16(10,n,true);end.setUint32(12,csize,true);end.setUint32(16,off,true);
+  const all=[...chunks,...central,new Uint8Array(end.buffer)];
+  const total=all.reduce((a,b)=>a+b.length,0), out=new Uint8Array(total); let p=0;
+  for(const a of all){out.set(a,p);p+=a.length;}
+  return out;
+}
+
+/* ---------- Date du fichier ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+function guessDate(fileName,top){
+  const m=fileName.match(/(\d{4}-\d{2}-\d{2})-\d{2}-\d{2}-\d{2}/);
+  if(m) return m[1];
+  const a=top.map(t=>t.text).join(' ').match(/As Of:?\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})/i);
+  if(a){ let y=+a[3]; if(y<100) y+=2000; const d=new Date(y,+a[1]-1,+a[2]+1); return iso(d); }
+  return iso(new Date());
+}
+
+/* ---------- PDF (généré sans bibliothèque) ---------- */
+const HW=[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584];
+const BASE={'à':'a','â':'a','ä':'a','ç':'c','é':'e','è':'e','ê':'e','ë':'e','î':'i','ï':'i','ô':'o','ö':'o','ù':'u','û':'u','ü':'u','É':'E','È':'E','À':'A','Ç':'C'};
+function tw(s,size,bold){let w=0;for(const ch of s){const b=BASE[ch]||ch,c=b.charCodeAt(0);w+=(c>=32&&c<=126?HW[c-32]:556);}return w*size/1000*(bold?1.06:1);}
+function fit(s,size,max,bold){s=String(s??'');if(tw(s,size,bold)<=max)return s;while(s.length&&tw(s+'…',size,bold)>max)s=s.slice(0,-1);return s+'…';}
+const WIN={'€':128,'‚':130,'„':132,'…':133,'‘':145,'’':146,'“':147,'”':148,'•':149,'–':150,'—':151};
+function pstr(s){let o='';for(const ch of String(s)){let c=ch.codePointAt(0);if(WIN[ch])c=WIN[ch];else if(c>255||(c>=128&&c<160))c=63;const x=String.fromCharCode(c);o+=(x==='('||x===')'||x==='\\')?'\\'+x:x;}return '('+o+')';}
+
+function buildPdf(rep,sel,dateStr,title,fileLabel){
+  title=title||'Commande du Programme W27'; fileLabel=fileLabel||('W27- '+dateStr);
+  const PW=612,PH=792,M=36;
+  const cols=[
+    {k:'sh',t:'Shipment ID',w:70},{k:'po',t:'Customer PO',w:88},{k:'part',t:'Part Name',w:176},{k:'qty',t:'Qty',w:38,c:1},
+    {t:'Reçu',w:30,box:1},{t:'Facture',w:36,box:1},{t:'Packing Slip',w:52,box:1},{t:'PO',w:22,box:1},{t:'Suivi',w:28,box:1}
+  ];
+  const TW=cols.reduce((a,c)=>a+c.w,0), X0=(PW-TW)/2, RH=16, HH=18, GH=17, FS=8.5;
+  const blue='0.318 0.459 0.725', band='0.941 0.941 0.957', soft='0.894 0.918 0.965', line='0.792 0.788 0.851', ink='0.114 0.133 0.2', mut='0.365 0.392 0.475';
+  // Groupes par PO (ordre d'apparition)
+  const groups=new Map();
+  for(const r of rep.rows){ if(!sel.has(r.po)) continue; if(!groups.has(r.po)) groups.set(r.po,[]); groups.get(r.po).push(r); }
+  const nRows=[...groups.values()].reduce((a,g)=>a+g.length,0);
+  const asof=(rep.top.map(t=>t.text).find(t=>/^As Of/i.test(t))||'').trim();
+  const pages=[]; let ops=[], y=0;
+  const T=(x,yy,s,size,bold,color)=>ops.push(`BT /${bold?'F2':'F1'} ${size} Tf ${color||ink} rg ${x.toFixed(2)} ${yy.toFixed(2)} Td ${pstr(s)} Tj ET`);
+  const R=(x,yy,w,h,fill)=>ops.push(`${fill} rg ${x.toFixed(2)} ${yy.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+  const B=(x,yy,w,h)=>ops.push(`${line} RG 0.6 w ${x.toFixed(2)} ${yy.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S`);
+  const tableHead=()=>{
+    R(X0,y-HH,TW,HH,blue); let x=X0;
+    for(const c of cols){ const s=fit(c.t,7.5,c.w-6,true); const tx=(c.c||c.box)?x+(c.w-tw(s,7.5,true))/2:x+4; T(tx,y-HH+6,s,7.5,true,'1 1 1'); x+=c.w; }
+    y-=HH;
+  };
+  const newPage=first=>{
+    if(ops.length) pages.push(ops);
+    ops=[]; y=PH-M;
+    if(first){
+      T(X0,y-16,title,16,true); y-=24;
+      const sub=[`Réception : ${dateStr}`,asof,`${nRows} ligne${nRows>1?'s':''}`,`${groups.size} Customer PO`].filter(Boolean).join('   •   ');
+      T(X0,y-10,sub,9,false,mut); y-=24;
+    }else{
+      T(X0,y-10,`${title} — ${dateStr} (suite)`,9,true,mut); y-=20;
+    }
+    tableHead();
+  };
+  newPage(true);
+  const bottom=M+20;
+  for(const [po,rows] of groups){
+    if(y-GH-RH<bottom) newPage(false);
+    R(X0,y-GH,TW,GH,soft);
+    T(X0+4,y-GH+5.5,fit(po||'(sans PO)',9,300,true),9,true);
+    y-=GH;
+    rows.forEach((r,i)=>{
+      if(y-RH<bottom){ newPage(false); }
+      if(i%2===1) R(X0,y-RH,TW,RH,band);
+      let x=X0;
+      for(const c of cols){
+        if(c.box){ const s=8; B(x+(c.w-s)/2,y-RH+(RH-s)/2,s,s); }
+        else{
+          const v=c.k==='qty'?String(r.qty??''):r[c.k];
+          const s=fit(v,FS,c.w-8,false);
+          const tx=c.c?x+(c.w-tw(s,FS,false))/2:x+4;
+          T(tx,y-RH+5,s,FS,false);
+        }
+        x+=c.w;
+      }
+      ops.push(`${line} RG 0.4 w ${X0.toFixed(2)} ${(y-RH).toFixed(2)} m ${(X0+TW).toFixed(2)} ${(y-RH).toFixed(2)} l S`);
+      y-=RH;
+    });
+    y-=6;
+  }
+  pages.push(ops);
+  // Pieds de page
+  pages.forEach((p,i)=>{
+    const f=`Page ${i+1} / ${pages.length}`;
+    p.push(`BT /F1 8 Tf ${mut} rg ${(PW-M-tw(f,8)).toFixed(2)} ${M-8} Td ${pstr(f)} Tj ET`);
+    p.push(`BT /F1 8 Tf ${mut} rg ${M} ${M-8} Td ${pstr(fileLabel)} Tj ET`);
+  });
+  // Assemblage
+  const objs=[]; const add=s=>{objs.push(s);return objs.length;};
+  add('<< /Type /Catalog /Pages 2 0 R >>');
+  add('PAGES');
+  const f1=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  const f2=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  const kidsIds=[];
+  for(const p of pages){
+    const body=p.join('\n');
+    const c=add(`<< /Length ${body.length} >>\nstream\n${body}\nendstream`);
+    kidsIds.push(add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> /Contents ${c} 0 R >>`));
+  }
+  objs[1]=`<< /Type /Pages /Kids [${kidsIds.map(k=>k+' 0 R').join(' ')}] /Count ${kidsIds.length} >>`;
+  let out='%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'; const offs=[];
+  objs.forEach((o,i)=>{offs.push(out.length);out+=`${i+1} 0 obj\n${o}\nendobj\n`;});
+  const xref=out.length;
+  out+=`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('');
+  out+=`trailer\n<< /Size ${objs.length+1} /Root 1 0 R /Info << /Title ${pstr(title+' '+dateStr)} >> >>\nstartxref\n${xref}\n%%EOF`;
+  const u=new Uint8Array(out.length); for(let i=0;i<out.length;i++) u[i]=out.charCodeAt(i)&255;
+  return u;
+}
+
+/* ---------- Mémoire des PO cochés ---------- */
+/* Clé d'un PO : ses 5 premiers caractères, en s'arrêtant au premier chiffre.
+   HNC24SEPT26TP -> HNC · SF-ILA-02117239 -> SF-IL · QUENTIN -> QUENT */
+function poKey(po){
+  const k=String(po||'').trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ');
+  const m=k.match(/^[^0-9]*/)[0].trim();
+  return (m||k).slice(0,5);
+}
+const MEM_DOC='memoire/po-v2', MEM_LS='w27-memoire-po-v2';
+let mem={days:{}}, memDb=null, autoSet=new Set();
+function lsGet(){try{return JSON.parse(localStorage.getItem(MEM_LS)||'null');}catch(_){return null;}}
+function lsSet(v){try{localStorage.setItem(MEM_LS,JSON.stringify(v));}catch(_){}}
+const memReady=(async()=>{
+  await 0;
+  const local=lsGet(); if(local&&local.days) mem=local;
+  try{
+    memDb=window.claude?.use?await window.claude.use('db'):null;
+    try{ const le=JSON.parse(localStorage.getItem(EXCL_LS)||'null'); if(Array.isArray(le)) exclus=le; }catch(_){}
+    try{ const ls=JSON.parse(localStorage.getItem(SPEC_LS)||'null'); if(Array.isArray(ls)) specPrefixes=ls; }catch(_){}
+    if(memDb){
+      const snap=await memDb.doc(MEM_DOC).get(); if(snap.exists&&snap.data()?.days) mem={days:{...snap.data().days}};
+      const ex=await memDb.doc(EXCL_DOC).get(); if(ex.exists&&Array.isArray(ex.data()?.prefixes)) exclus=[...ex.data().prefixes];
+      const sp=await memDb.doc(SPEC_DOC).get(); if(sp.exists&&Array.isArray(sp.data()?.prefixes)) specPrefixes=[...sp.data().prefixes];
+    }
+  }catch(_){ memDb=null; }
+  $('excl').value=exclus.join(', ');
+  $('sprefix').value=specPrefixes.join(', ');
+  if(shown) renderSpecial(shown,shown===EX_REF);
+  renderMemory();
+  if(shown&&shown===EX_REF) render(shown,true);
+})();
+function stats(){
+  const st={};
+  for(const d of Object.values(mem.days)){
+    for(const k of new Set((d.seen||[]).map(poKey))){ (st[k]??={seen:0,checked:0}).seen++; }
+    for(const k of new Set((d.checked||[]).map(poKey))){ (st[k]??={seen:0,checked:0}).checked++; }
+  }
+  return st;
+}
+const isHabit=s=>s&&s.checked>=2&&s.checked/Math.max(s.seen,1)>=0.5;
+const EXCL_DOC='memoire/exclus', EXCL_LS='w27-exclus', EXCL_DEFAULT=['HNC','QB','QUENTIN','MELISSA','MB'];
+let exclus=[...EXCL_DEFAULT];
+const norm=s=>String(s||'').trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const isExcluded=po=>{const p=norm(po);return exclus.some(x=>x&&p.startsWith(x));};
+function parseExcl(t){return [...new Set(String(t).split(/[,;\n]+/).map(norm).filter(Boolean))];}
+function applyMemory(rep){
+  const date=dateVal(), today=mem.days[date], st=stats();
+  const pos=poList(rep).map(p=>p[0]).filter(po=>!isExcluded(po)||(today&&(today.checked||[]).includes(po)));
+  autoSet=new Set();
+  if(today){ const c=new Set(today.checked||[]); selected=new Set(pos.filter(po=>c.has(po))); }
+  else{ selected=new Set(); for(const po of pos) if(isHabit(st[poKey(po)])){ selected.add(po); autoSet.add(po); } }
+  if(!today) return;
+  for(const po of pos) if(isHabit(st[poKey(po)])) autoSet.add(po);
+}
+async function remember(){
+  if(!current) return;
+  const seen=[...new Set(current.rows.map(r=>r.po))], checked=[...new Set(selected)];
+  mem.days[dateVal()]={seen,checked};
+  const keys=Object.keys(mem.days).sort(); while(keys.length>90) delete mem.days[keys.shift()];
+  lsSet(mem);
+  if(memDb){ try{ await memDb.doc(MEM_DOC).set(mem); }catch(_){} }
+  renderMemory();
+}
+function renderMemory(){
+  const n=Object.keys(mem.days).length, st=stats(), habits=Object.entries(st).filter(([k,v])=>isHabit(v)&&!isExcluded(k)).length;
+  $('memtxt').innerHTML=n?`Mémoire : <b>${n}</b> jour${n>1?'s':''} enregistré${n>1?'s':''} · <b>${habits}</b> PO appris`:'Mémoire vide : rien n\'est coché d\'office pour l\'instant. Elle se remplit à chaque téléchargement.';
+  $('forget').hidden=!n;
+}
+let forgetArmed=false;
+document.addEventListener('click',async e=>{
+  if(e.target.id!=='forget'){ if(forgetArmed){forgetArmed=false;$('forget').textContent='Effacer la mémoire';} return; }
+  if(!forgetArmed){ forgetArmed=true; e.target.textContent='Confirmer l\'effacement'; return; }
+  forgetArmed=false; e.target.textContent='Effacer la mémoire';
+  mem={days:{}}; lsSet(mem); autoSet=new Set();
+  if(memDb){ try{ await memDb.doc(MEM_DOC).set(mem); }catch(_){} }
+  renderMemory(); if(shown) render(shown,shown===EX_REF);
+});
+
+/* ---------- Interface ---------- */
+const $=id=>document.getElementById(id);
+let current=null, selected=new Set(), EX_REF=null;
+const dateVal=()=>$('date').value||iso(new Date());
+const outName=ext=>`W27- ${dateVal()}.${ext||'xlsx'}`;
+const specName=ext=>`W27- ${dateVal()} Commande Special.${ext||'xlsx'}`;
+const SPEC_DOC='memoire/special', SPEC_LS='w27-special', SPEC_DEFAULT=['QB-TEZ','QB-FAS','HNC-TEZ','HNC-FAS','MB-TEZ','MB-FAS'];
+let specPrefixes=[...SPEC_DEFAULT], specExtra=new Set();
+const isAutoSpecial=po=>{const p=String(po||'').trim().toUpperCase();return p.includes('SPECIAL')||specPrefixes.some(x=>x&&p.startsWith(x));};
+const isSpecial=po=>isAutoSpecial(po)||specExtra.has(po);
+const specRows=rep=>rep.rows.filter(r=>isSpecial(r.po));
+function showMsg(kind,text){const m=$('msg');m.className='msg '+kind;m.textContent=text;m.hidden=false;}
+function poList(rep){const m=new Map();for(const r of rep.rows)m.set(r.po,(m.get(r.po)||0)+1);return [...m];}
+function renderRows(rep){
+  const rows=rep.rows.filter(r=>selected.has(r.po));
+  $('rows').innerHTML=rows.length?rows.map(r=>`<tr><td class="id">${esc(r.sh)}</td><td class="cpo">${esc(r.po)}</td><td>${esc(r.part)}</td><td class="q">${esc(r.qty??'')}</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>`).join('')
+    :'<tr><td colspan="9" class="empty">Aucun Customer PO coché.</td></tr>';
+  const all=poList(rep).length;
+  $('pocount').textContent=`${selected.size} sur ${all} cochés · ${rows.length} ligne${rows.length>1?'s':''}`;
+  const off=!rows.length||!current;
+  $('save').disabled=off; $('pdf').disabled=off;
+}
+function renderSpecial(rep,example){
+  const rows=specRows(rep), pos=new Set(rows.map(r=>r.po));
+  $('sstats').innerHTML=(example?'<span class="chip example">Exemple</span>':'')+`<span class="chip"><b>${rows.length}</b> ligne${rows.length>1?'s':''}</span><span class="chip"><b>${pos.size}</b> Customer PO</span>`+[...pos].map(p=>`<span class="chip">${esc(p)}${isAutoSpecial(p)?'':' <b>(ajouté)</b>'}</span>`).join('');
+  const others=poList(rep).filter(([po])=>!isAutoSpecial(po));
+  $('saddlist').innerHTML=others.length?others.map(([po,n])=>`<button type="button" class="po" data-po="${esc(po)}" aria-pressed="${specExtra.has(po)}">${esc(po||'(sans PO)')}<small>${n}</small></button>`).join(''):'<span class="count">Tous les PO du rapport sont déjà dans la Commande Special.</span>';
+  $('saddcount').textContent=specExtra.size?`${specExtra.size} PO ajouté${specExtra.size>1?'s':''} à la main`:'';
+  $('saddbtn').disabled=!current||example;
+  $('srows').innerHTML=rows.length?rows.map(r=>`<tr><td class="id">${esc(r.sh)}</td><td class="cpo">${esc(r.po)}</td><td>${esc(r.part)}</td><td class="q">${esc(r.qty??'')}</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>`).join('')
+    :'<tr><td colspan="9" class="empty">Aucune commande SPECIAL dans ce rapport.</td></tr>';
+  $('sfname').textContent=specName();
+  const off=!rows.length||!current||example; $('ssave').disabled=off; $('spdf').disabled=off;
+}
+function render(rep,example){
+  renderSpecial(rep,example);
+  const shs=new Set(rep.rows.map(r=>r.sh)).size, pos=poList(rep);
+  const asof=rep.top.map(t=>t.text).find(t=>/^As Of/i.test(t));
+  $('stats').innerHTML=(example?'<span class="chip example">Exemple, dépose ton fichier pour voir le tien</span>':'')+
+    `<span class="chip"><b>${rep.rows.length}</b> lignes</span><span class="chip"><b>${shs}</b> shipments</span><span class="chip"><b>${pos.length}</b> Customer PO</span>`+
+    (asof?`<span class="chip">${esc(asof)}</span>`:'');
+  const ordered=[...pos.filter(p=>!isExcluded(p[0])),...pos.filter(p=>isExcluded(p[0]))];
+  $('polist').innerHTML=ordered.map(([po,n])=>`<button type="button" class="po${autoSet.has(po)?' auto':''}${isExcluded(po)?' excl':''}" data-po="${esc(po)}" aria-pressed="${selected.has(po)}"${autoSet.has(po)?' title="Coché automatiquement d\'après tes habitudes"':''}>${esc(po||'(sans PO)')}<small>${n}</small></button>`).join('');
+  $('fname').textContent=outName();
+  renderRows(rep);
+}
+let shown=null;
+$('polist').addEventListener('click',e=>{
+  const b=e.target.closest('.po'); if(!b||!shown) return;
+  const po=b.dataset.po;
+  if(selected.has(po)) selected.delete(po); else selected.add(po);
+  b.setAttribute('aria-pressed',selected.has(po));
+  renderRows(shown);
+});
+function setAll(on){ if(!shown) return; selected=new Set(on?poList(shown).map(p=>p[0]).filter(po=>!isExcluded(po)):[]); document.querySelectorAll('.po').forEach(b=>b.setAttribute('aria-pressed',selected.has(b.dataset.po))); renderRows(shown); }
+$('excl').addEventListener('change',async e=>{
+  exclus=parseExcl(e.target.value); e.target.value=exclus.join(', ');
+  try{localStorage.setItem(EXCL_LS,JSON.stringify(exclus));}catch(_){}
+  for(const po of [...autoSet]) if(isExcluded(po)){ autoSet.delete(po); selected.delete(po); }
+  if(shown) render(shown,shown===EX_REF);
+  renderMemory();
+  if(memDb){ try{ await memDb.doc(EXCL_DOC).set({prefixes:exclus}); }catch(_){} }
+});
+$('all').addEventListener('click',()=>setAll(true));
+$('none').addEventListener('click',()=>setAll(false));
+
+async function handle(file){
+  if(!file) return;
+  $('msg').hidden=true;
+  if(!/\.xlsx$/i.test(file.name)){showMsg('err',"Ce fichier n'est pas un .xlsx. Dépose le rapport W27_Daily_Shipment_Report tel que reçu.");return;}
+  try{
+    const rep=await readReport(await file.arrayBuffer());
+    if(!rep.rows.length) throw new Error("Le rapport ne contient aucune ligne d'expédition.");
+    current=rep; shown=rep; specExtra=new Set();
+    $('date').value=guessDate(file.name,rep.top);
+    await memReady;
+    applyMemory(rep);
+    render(rep,false);
+    showMsg('ok',`« ${file.name} » est prêt. ${autoSet.size?`${autoSet.size} PO reconnu${autoSet.size>1?'s':''} et coché${autoSet.size>1?'s':''} d'office. `:''}Coche les PO voulus, vérifie la date, puis télécharge.`);
+  }catch(e){ current=null; $('save').disabled=true; $('pdf').disabled=true; $('ssave').disabled=true; $('spdf').disabled=true; showMsg('err',e.message||"Impossible de lire ce fichier."); }
+}
+async function offer(bytes,name,mime){
+  let dl=null;
+  try{ dl=window.claude?.use?await window.claude.use('downloads'):null; }catch(_){dl=null;}
+  if(dl){
+    try{ await dl.save({filename:name,data:new Blob([bytes])}); showMsg('ok',`« ${name} » est téléchargé.`); }
+    catch(e){ if(e?.code==='declined') showMsg('err','Téléchargement annulé.'); else if(e?.code==='rate_limited') showMsg('err','Une fenêtre de téléchargement est déjà ouverte.'); else showMsg('err',"Le téléchargement n'a pas fonctionné ici. Ouvre la page dans ton navigateur et réessaie."); }
+    return;
+  }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([bytes],{type:mime}));
+  a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+const filtered=()=>({top:current.top,rows:current.rows.filter(r=>selected.has(r.po))});
+$('save').addEventListener('click',()=>{ if(current){ remember(); offer(buildXlsx(filtered()),outName('xlsx'),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); } });
+$('pdf').addEventListener('click',()=>{ if(current){ remember(); offer(buildPdf(current,selected,dateVal()),outName('pdf'),'application/pdf'); } });
+$('ssave').addEventListener('click',()=>{ if(current) offer(buildXlsx({top:current.top,rows:specRows(current)}),specName('xlsx'),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); });
+$('spdf').addEventListener('click',()=>{ if(current){ const sp=new Set(specRows(current).map(r=>r.po)); offer(buildPdf(current,sp,dateVal(),'Commande Special W27','W27- '+dateVal()+' Commande Special'),specName('pdf'),'application/pdf'); } });
+$('saddbtn').addEventListener('click',e=>{ const l=$('saddlist'); l.hidden=!l.hidden; e.currentTarget.setAttribute('aria-expanded',!l.hidden); });
+$('saddlist').addEventListener('click',e=>{
+  const b=e.target.closest('.po'); if(!b||!current) return;
+  const po=b.dataset.po; if(specExtra.has(po)) specExtra.delete(po); else specExtra.add(po);
+  renderSpecial(current,false);
+});
+$('sprefix').addEventListener('change',async e=>{
+  specPrefixes=parseExcl(e.target.value); e.target.value=specPrefixes.join(', ');
+  try{localStorage.setItem(SPEC_LS,JSON.stringify(specPrefixes));}catch(_){}
+  if(shown) renderSpecial(shown,shown===EX_REF);
+  if(memDb){ try{ await memDb.doc(SPEC_DOC).set({prefixes:specPrefixes}); }catch(_){} }
+});
+window.__w27={readReport,buildXlsx,buildPdf,guessDate};
+
+const drop=$('drop');
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>handle(e.dataTransfer.files[0]));
+$('file').addEventListener('change',e=>{handle(e.target.files[0]);e.target.value='';});
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();if(!drop.contains(e.target))handle(e.dataTransfer.files[0]);});
+$('date').addEventListener('input',()=>{$('fname').textContent=outName();$('sfname').textContent=specName();});
+
+/* Exemple affiché avant le premier dépôt (données fictives) */
+$('date').value='2026-09-25';
+const EX=EX_REF={top:[{row:4,text:'As Of: 9/24/26'}],rows:[
+  {sh:'SH0000001',po:'EXEMPLE-PO1',part:'Produit A 80mg',qty:1},
+  {sh:'SH0000002',po:'EXEMPLE-PO2',part:'Produit B 20mL vial',qty:17},
+  {sh:'SH0000002',po:'EXEMPLE-PO2',part:'Produit B 20mL vial',qty:17},
+  {sh:'SH0000003',po:'EXEMPLE-PO3',part:'Produit C tampons',qty:12000},
+  {sh:'SH0000004',po:'EXEMPLESPECIAL1',part:'Produit D 30mg',qty:2}
+]};
+shown=EX; selected=new Set(['EXEMPLE-PO2']); autoSet=new Set(['EXEMPLE-PO2']);
+render(EX,true);
+</script>
+
+</body>
+</html>
