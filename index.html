@@ -138,7 +138,7 @@ td.blank{min-width:46px}
         <button class="link" id="none" type="button">Aucun</button>
       </div>
       <div class="polist" id="polist"></div>
-      <div class="exclrow"><label for="excl">Jamais cochés d'office (début du PO) :</label><input id="excl" type="text" value="HNC, QB, QUENTIN, MELISSA, MB" spellcheck="false" autocomplete="off"></div>
+      <div class="exclrow"><label for="excl">Jamais dans la Commande du Programme (début du PO) :</label><input id="excl" type="text" value="TQB, TEZ, HNC, QB, QUENTIN, MELISSA, CHRISTIANA, FAS, MB, KOHAR" spellcheck="false" autocomplete="off"></div>
       <div class="memory"><span id="memtxt">Mémoire en chargement…</span><button class="link" id="forget" type="button">Effacer la mémoire</button></div>
     </div>
     <div class="tablebox">
@@ -183,8 +183,8 @@ td.blank{min-width:46px}
     <li>Toutes les lignes sont gardées, doublons de SH et de PO compris.</li>
     <li>Commande du Programme : les PO cochés décident de ce qui sort dans l'Excel et dans le PDF.</li>
     <li>Commande Special : les PO qui contiennent « SPECIAL » (HNCSPECIAL24, QBSPECIAL24…) ou qui commencent par un début de la liste (QB-TEZ, HNC-FAS…) sont pris d'office. « + Ajouter des PO » te laisse en ajouter d'autres pour ce rapport-ci.</li>
-    <li>Les PO qui commencent par un des débuts de la liste « Jamais cochés d'office » ne sont jamais cochés tout seuls, ni par « Tout ». Ils sont en pointillé à la fin de la liste, et tu peux quand même les cocher à la main.</li>
-    <li>La page retient tes choix à chaque téléchargement. Un PO que tu coches souvent (au moins 2 jours, et la moitié des fois où il apparaît) sera coché d'office, marqué « auto ». La page reconnaît un PO par ses 5 premiers caractères, en s'arrêtant au premier chiffre : SF-ILA-02117239 devient SF-IL, HNC24SEPT26TP devient HNC, QUENTIN devient QUENT. Décoche un PO « auto » et la page en tiendra compte.</li>
+    <li>Les PO qui commencent par un des débuts de la liste « Jamais dans la Commande du Programme » (TQB, TEZ, HNC, QB, QUENTIN, MELISSA, CHRISTIANA, FAS, MB, KOHAR) n'apparaissent pas dans ce rapport : ni dans la liste, ni dans l'Excel, ni dans le PDF. La Commande Special n'est pas touchée par cette liste.</li>
+    <li>La page retient tes choix à chaque téléchargement. Un PO que tu coches souvent (au moins 2 jours, et la moitié des fois où il apparaît) sera coché d'office, marqué « auto ». La page reconnaît un PO par tout ce qui est avant le premier chiffre : SF-ILA-02117239 devient SF-ILA, HNC24SEPT26TP devient HNC, QUENTIN reste QUENTIN. Décoche un PO « auto » et la page en tiendra compte.</li>
     <li>Le PDF regroupe les lignes par Customer PO, avec des cases à cocher pour la vérification sur papier.</li>
   </ol>
 </div>
@@ -500,12 +500,12 @@ function buildPdf(rep,sel,dateStr,title,fileLabel){
 }
 
 /* ---------- Mémoire des PO cochés ---------- */
-/* Clé d'un PO : ses 5 premiers caractères, en s'arrêtant au premier chiffre.
-   HNC24SEPT26TP -> HNC · SF-ILA-02117239 -> SF-IL · QUENTIN -> QUENT */
+/* Clé d'un PO (Commande du Programme seulement) : tout ce qui est avant le premier chiffre.
+   HNC24SEPT26TP -> HNC · SF-ILA-02117239 -> SF-ILA · QUENTIN -> QUENTIN */
 function poKey(po){
   const k=String(po||'').trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ');
-  const m=k.match(/^[^0-9]*/)[0].trim();
-  return (m||k).slice(0,5);
+  const m=k.match(/^[^0-9]*/)[0].replace(/[\s\-_./]+$/,'');
+  return m||k;
 }
 const MEM_DOC='memoire/po-v2', MEM_LS='w27-memoire-po-v2';
 let mem={days:{}}, memDb=null, autoSet=new Set();
@@ -539,14 +539,14 @@ function stats(){
   return st;
 }
 const isHabit=s=>s&&s.checked>=2&&s.checked/Math.max(s.seen,1)>=0.5;
-const EXCL_DOC='memoire/exclus', EXCL_LS='w27-exclus', EXCL_DEFAULT=['HNC','QB','QUENTIN','MELISSA','MB'];
+const EXCL_DOC='memoire/exclus-v3', EXCL_LS='w27-exclus-v3', EXCL_DEFAULT=['TQB','TEZ','HNC','QB','QUENTIN','MELISSA','CHRISTIANA','FAS','MB','KOHAR'];
 let exclus=[...EXCL_DEFAULT];
 const norm=s=>String(s||'').trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const isExcluded=po=>{const p=norm(po);return exclus.some(x=>x&&p.startsWith(x));};
 function parseExcl(t){return [...new Set(String(t).split(/[,;\n]+/).map(norm).filter(Boolean))];}
 function applyMemory(rep){
   const date=dateVal(), today=mem.days[date], st=stats();
-  const pos=poList(rep).map(p=>p[0]).filter(po=>!isExcluded(po)||(today&&(today.checked||[]).includes(po)));
+  const pos=progList(rep).map(p=>p[0]);
   autoSet=new Set();
   if(today){ const c=new Set(today.checked||[]); selected=new Set(pos.filter(po=>c.has(po))); }
   else{ selected=new Set(); for(const po of pos) if(isHabit(st[poKey(po)])){ selected.add(po); autoSet.add(po); } }
@@ -555,7 +555,7 @@ function applyMemory(rep){
 }
 async function remember(){
   if(!current) return;
-  const seen=[...new Set(current.rows.map(r=>r.po))], checked=[...new Set(selected)];
+  const seen=[...new Set(current.rows.map(r=>r.po).filter(po=>!isExcluded(po)))], checked=[...progSel()];
   mem.days[dateVal()]={seen,checked};
   const keys=Object.keys(mem.days).sort(); while(keys.length>90) delete mem.days[keys.shift()];
   lsSet(mem);
@@ -590,12 +590,14 @@ const isSpecial=po=>isAutoSpecial(po)||specExtra.has(po);
 const specRows=rep=>rep.rows.filter(r=>isSpecial(r.po));
 function showMsg(kind,text){const m=$('msg');m.className='msg '+kind;m.textContent=text;m.hidden=false;}
 function poList(rep){const m=new Map();for(const r of rep.rows)m.set(r.po,(m.get(r.po)||0)+1);return [...m];}
+const progList=rep=>poList(rep).filter(([po])=>!isExcluded(po));
+const progSel=()=>new Set([...selected].filter(po=>!isExcluded(po)));
 function renderRows(rep){
-  const rows=rep.rows.filter(r=>selected.has(r.po));
+  const rows=rep.rows.filter(r=>selected.has(r.po)&&!isExcluded(r.po));
   $('rows').innerHTML=rows.length?rows.map(r=>`<tr><td class="id">${esc(r.sh)}</td><td class="cpo">${esc(r.po)}</td><td>${esc(r.part)}</td><td class="q">${esc(r.qty??'')}</td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td><td class="blank"></td></tr>`).join('')
     :'<tr><td colspan="9" class="empty">Aucun Customer PO coché.</td></tr>';
-  const all=poList(rep).length;
-  $('pocount').textContent=`${selected.size} sur ${all} cochés · ${rows.length} ligne${rows.length>1?'s':''}`;
+  const all=progList(rep).length;
+  $('pocount').textContent=`${progSel().size} sur ${all} cochés · ${rows.length} ligne${rows.length>1?'s':''}`;
   const off=!rows.length||!current;
   $('save').disabled=off; $('pdf').disabled=off;
 }
@@ -613,12 +615,11 @@ function renderSpecial(rep,example){
 }
 function render(rep,example){
   renderSpecial(rep,example);
-  const shs=new Set(rep.rows.map(r=>r.sh)).size, pos=poList(rep);
+  const shs=new Set(rep.rows.map(r=>r.sh)).size, pos=poList(rep), ordered=pos.filter(p=>!isExcluded(p[0]));
   const asof=rep.top.map(t=>t.text).find(t=>/^As Of/i.test(t));
   $('stats').innerHTML=(example?'<span class="chip example">Exemple, dépose ton fichier pour voir le tien</span>':'')+
-    `<span class="chip"><b>${rep.rows.length}</b> lignes</span><span class="chip"><b>${shs}</b> shipments</span><span class="chip"><b>${pos.length}</b> Customer PO</span>`+
+    `<span class="chip"><b>${rep.rows.length}</b> lignes</span><span class="chip"><b>${shs}</b> shipments</span><span class="chip"><b>${pos.length}</b> Customer PO</span>`+(pos.length-ordered.length?`<span class="chip"><b>${pos.length-ordered.length}</b> PO exclus du Programme</span>`:'')+
     (asof?`<span class="chip">${esc(asof)}</span>`:'');
-  const ordered=[...pos.filter(p=>!isExcluded(p[0])),...pos.filter(p=>isExcluded(p[0]))];
   $('polist').innerHTML=ordered.map(([po,n])=>`<button type="button" class="po${autoSet.has(po)?' auto':''}${isExcluded(po)?' excl':''}" data-po="${esc(po)}" aria-pressed="${selected.has(po)}"${autoSet.has(po)?' title="Coché automatiquement d\'après tes habitudes"':''}>${esc(po||'(sans PO)')}<small>${n}</small></button>`).join('');
   $('fname').textContent=outName();
   renderRows(rep);
@@ -631,11 +632,11 @@ $('polist').addEventListener('click',e=>{
   b.setAttribute('aria-pressed',selected.has(po));
   renderRows(shown);
 });
-function setAll(on){ if(!shown) return; selected=new Set(on?poList(shown).map(p=>p[0]).filter(po=>!isExcluded(po)):[]); document.querySelectorAll('.po').forEach(b=>b.setAttribute('aria-pressed',selected.has(b.dataset.po))); renderRows(shown); }
+function setAll(on){ if(!shown) return; selected=new Set(on?progList(shown).map(p=>p[0]):[]); document.querySelectorAll('.po').forEach(b=>b.setAttribute('aria-pressed',selected.has(b.dataset.po))); renderRows(shown); }
 $('excl').addEventListener('change',async e=>{
   exclus=parseExcl(e.target.value); e.target.value=exclus.join(', ');
   try{localStorage.setItem(EXCL_LS,JSON.stringify(exclus));}catch(_){}
-  for(const po of [...autoSet]) if(isExcluded(po)){ autoSet.delete(po); selected.delete(po); }
+  for(const po of [...selected]) if(isExcluded(po)){ autoSet.delete(po); selected.delete(po); }
   if(shown) render(shown,shown===EX_REF);
   renderMemory();
   if(memDb){ try{ await memDb.doc(EXCL_DOC).set({prefixes:exclus}); }catch(_){} }
@@ -671,9 +672,9 @@ async function offer(bytes,name,mime){
   a.download=name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
-const filtered=()=>({top:current.top,rows:current.rows.filter(r=>selected.has(r.po))});
+const filtered=()=>({top:current.top,rows:current.rows.filter(r=>selected.has(r.po)&&!isExcluded(r.po))});
 $('save').addEventListener('click',()=>{ if(current){ remember(); offer(buildXlsx(filtered()),outName('xlsx'),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); } });
-$('pdf').addEventListener('click',()=>{ if(current){ remember(); offer(buildPdf(current,selected,dateVal()),outName('pdf'),'application/pdf'); } });
+$('pdf').addEventListener('click',()=>{ if(current){ remember(); offer(buildPdf(current,progSel(),dateVal()),outName('pdf'),'application/pdf'); } });
 $('ssave').addEventListener('click',()=>{ if(current) offer(buildXlsx({top:current.top,rows:specRows(current)}),specName('xlsx'),'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); });
 $('spdf').addEventListener('click',()=>{ if(current){ const sp=new Set(specRows(current).map(r=>r.po)); offer(buildPdf(current,sp,dateVal(),'Commande Special W27','W27- '+dateVal()+' Commande Special'),specName('pdf'),'application/pdf'); } });
 $('saddbtn').addEventListener('click',e=>{ const l=$('saddlist'); l.hidden=!l.hidden; e.currentTarget.setAttribute('aria-expanded',!l.hidden); });
